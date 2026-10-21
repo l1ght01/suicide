@@ -663,6 +663,49 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
   
   try {
     if (GOOGLE_SCRIPT_URL) {
+      await fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify(payload) 
+      });
+      // НЕ проверяем response.ok, так как ответ непрозрачный
+    }
+    
+    clearProgress(storageKey);
+    document.getElementById(formCardId).classList.add('hidden');
+    document.getElementById(questionsCardId).classList.add('hidden');
+    document.getElementById(thanksId).classList.remove('hidden');
+    document.getElementById('globalProgressWrap').classList.add('hidden');
+  } catch (err) { 
+    alert('Ошибка отправки. Попробуйте ещё раз.'); 
+    btn.disabled = false; btn.textContent = 'Завершить'; 
+  }
+}
+  const fio = document.getElementById(fioId).value.trim();
+  const cls = document.getElementById(classId).value;
+  const age = document.getElementById(ageId).value.trim();
+  
+  if (!fio || !cls || !age) {
+    alert('Пожалуйста, заполните все поля с вашими данными.');
+    return;
+  }
+  
+  const isFilled = checkAndScroll(questions);
+  if (!isFilled) {
+    alert('Пожалуйста, ответьте на все вопросы. Первый пропущенный вопрос подсвечен.');
+    return;
+  }
+
+  const answers = collectAnswers(questions);
+  btn.disabled = true; btn.textContent = 'Отправка...';
+  
+  const results = ageGroup === '10-13' ? calculate10to13(answers) : calculate14to17(answers);
+  const suspicious = checkSuspicious(answers, ageGroup);
+  const payload = { ageGroup, fio, className: cls, age, timestamp: new Date().toISOString(), answers, results, suspicious };
+  
+  try {
+    if (GOOGLE_SCRIPT_URL) {
       // Отправляем данные, не ожидая ответа (no-cors)
       await fetch(GOOGLE_SCRIPT_URL, { 
         method: 'POST', 
