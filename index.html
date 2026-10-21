@@ -84,6 +84,9 @@
 </style>
 </head>
 <body>
+<!-- Скрытый iframe для отправки данных без перезагрузки страницы -->
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
 <div class="container">
   <h1>Опросник</h1>
   <div class="subhead">Пожалуйста, ответьте на вопросы. Это займёт 15–20 минут.</div>
@@ -633,12 +636,12 @@ function checkSuspicious(answers, ageGroup) {
   const values = Object.values(answers).filter(v => v != null);
   if (values.length > 0 && values.every(v => v === values[0])) warnings.push('Все ответы одинаковые.');
   if (ageGroup === '10-13') { if (answers['z19'] >= 3) warnings.push('Зунг п.19 (желание умереть) — высокий балл.'); }
-  else { if (answers['b9'] >= 2) warnings.push('Бек п.9 (суицидальные мысли) — высокий балл.'); }
+  else { if (answers['b9'] >= 2) warnings.push('Бек п.9 (суидальные мысли) — высокий балл.'); }
   return warnings;
 }
 
-// ===== ОТПРАВКА =====
-async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, formCardId, questionsCardId, storageKey, btn) {
+// ===== ОТПРАВКА ЧЕРЕЗ HTML-ФОРМУ =====
+function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, formCardId, questionsCardId, storageKey, btn) {
   const fio = document.getElementById(fioId).value.trim();
   const cls = document.getElementById(classId).value;
   const age = document.getElementById(ageId).value.trim();
@@ -661,25 +664,30 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
   const suspicious = checkSuspicious(answers, ageGroup);
   const payload = { ageGroup, fio, className: cls, age, timestamp: new Date().toISOString(), answers, results, suspicious };
   
-  try {
-    if (GOOGLE_SCRIPT_URL) {
-      await fetch(GOOGLE_SCRIPT_URL, { 
-        method: 'POST', 
-        mode: 'no-cors', 
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-        body: JSON.stringify(payload) 
-      });
-    }
-    
+  // Отправка через форму
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = GOOGLE_SCRIPT_URL;
+  form.target = 'hidden_iframe';
+  form.style.display = 'none';
+  
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'data';
+  input.value = JSON.stringify(payload);
+  form.appendChild(input);
+  
+  document.body.appendChild(form);
+  form.submit();
+  
+  setTimeout(() => {
+    document.body.removeChild(form);
     clearProgress(storageKey);
     document.getElementById(formCardId).classList.add('hidden');
     document.getElementById(questionsCardId).classList.add('hidden');
     document.getElementById(thanksId).classList.remove('hidden');
     document.getElementById('globalProgressWrap').classList.add('hidden');
-  } catch (err) { 
-    alert('Ошибка отправки. Попробуйте ещё раз.'); 
-    btn.disabled = false; btn.textContent = 'Завершить'; 
-  }
+  }, 500);
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====
