@@ -663,28 +663,26 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
   
   try {
     if (GOOGLE_SCRIPT_URL) {
-      const response = await fetch(GOOGLE_SCRIPT_URL, { 
-      method: 'POST', 
-      mode: 'no-cors',  // ← добавьте эту строку
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-      body: JSON.stringify(payload) 
+      // Отправляем данные, не ожидая ответа (no-cors)
+      await fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify(payload) 
       });
-
-      if (!response.ok) {
-        throw new Error('Server responded with status ' + response.status);
-      }
+      // Проверку response.ok убрали, так как с no-cors ответ непрозрачный
     }
+    
     clearProgress(storageKey);
     document.getElementById(formCardId).classList.add('hidden');
     document.getElementById(questionsCardId).classList.add('hidden');
     document.getElementById(thanksId).classList.remove('hidden');
     document.getElementById('globalProgressWrap').classList.add('hidden');
   } catch (err) { 
-    alert('Ошибка отправки: ' + err.message); 
+    alert('Ошибка отправки. Попробуйте ещё раз.'); 
     btn.disabled = false; btn.textContent = 'Завершить'; 
   }
 }
-
 // ===== ИНИЦИАЛИЗАЦИЯ =====
 const allQ10 = [...zungQuestions, ...phillipsQuestions];
 const allQ14 = [...beckQuestions, ...staiQuestions];
