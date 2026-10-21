@@ -581,7 +581,8 @@ function calculate10to13(answers) {
       const ans = answers[id];
       if (ans == null) return;
       const key = phillipsKey[id];
-      if ((key === '+' && ans === 1) || (key === '-' && ans === 0)) score++;
+      if ((key === '+' && ans === 0) || (key === '-' && ans === 1)) score++;
+      
     });
     phillipsFactorScores[fName] = score;
   });
