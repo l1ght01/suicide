@@ -87,103 +87,10 @@
 <!-- Скрытый iframe для отправки данных без перезагрузки страницы -->
 <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
-<div class="container">
-  <h1>Опросник</h1>
-  <div class="subhead">Пожалуйста, ответьте на вопросы. Это займёт 15–20 минут.</div>
-
-  <div class="sticky-header">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="10-13">10–13 лет</button>
-      <button class="tab-btn" data-tab="14-17">14–17 лет</button>
-    </div>
-    <div class="global-progress-wrap" id="globalProgressWrap">
-      <div class="global-progress-text" id="globalProgressText">Отвечено: 0 из 0</div>
-      <div class="global-progress-bar"><div class="global-progress-fill" id="globalProgressFill"></div></div>
-    </div>
-  </div>
-
-  <!-- ================= 10-13 ================= -->
-  <div class="tab-pane active" id="tab-10-13">
-    <div class="card" id="form10Card">
-      <h2>Ваши данные</h2>
-      <div class="field">
-        <label>Фамилия Имя Отчество</label>
-        <input type="text" id="fio10" placeholder="Иванов Иван Иванович" autocomplete="off">
-      </div>
-      <div class="grid-2">
-        <div class="field">
-          <label>Класс</label>
-          <select id="class10">
-            <option value="">Выберите класс</option>
-            <option>5 класс</option><option>6 класс</option><option>7 класс</option>
-            <option>8 класс</option><option>9 класс</option><option>10 класс</option><option>11 класс</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Возраст</label>
-          <input type="number" id="age10" min="1" max="99" placeholder="10">
-        </div>
-      </div>
-    </div>
-    <div class="card" id="questions10">
-      <div id="q10Container"></div>
-      <div style="margin-top:1.5rem; text-align:right;">
-        <button class="btn btn-primary" id="submit10">Завершить</button>
-      </div>
-    </div>
-    <div class="card thanks hidden" id="thanks10">
-      <i>✓</i><h2>Благодарим за ваши ответы!</h2>
-      <p>Результаты вы сможете узнать у педагога-психолога через неделю-другую.</p>
-      <div class="help-box">
-        <h3>Если тебе сейчас плохо или тревожно:</h3>
-        <p>• <strong>133</strong> — единый номер круглосуточной экстренной психологической помощи (анонимно, бесплатно) </p>
-        <p>• <strong>8-801-100-16-11</strong> — общенациональная детская телефонная линия помощи (круглосуточно, анонимно) </p>
-        <p>• Также ты можешь обратиться к школьному психологу лично — это бесплатно и конфиденциально.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= 14-17 ================= -->
-  <div class="tab-pane" id="tab-14-17">
-    <div class="card" id="form14Card">
-      <h2>Ваши данные</h2>
-      <div class="field">
-        <label>Фамилия Имя Отчество</label>
-        <input type="text" id="fio14" placeholder="Иванов Иван Иванович" autocomplete="off">
-      </div>
-      <div class="grid-2">
-        <div class="field">
-          <label>Класс</label>
-          <select id="class14">
-            <option value="">Выберите класс</option>
-            <option>5 класс</option><option>6 класс</option><option>7 класс</option>
-            <option>8 класс</option><option>9 класс</option><option>10 класс</option><option>11 класс</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Возраст</label>
-          <input type="number" id="age14" min="1" max="99" placeholder="14">
-        </div>
-      </div>
-    </div>
-    <div class="card" id="questions14">
-      <div id="q14Container"></div>
-      <div style="margin-top:1.5rem; text-align:right;">
-        <button class="btn btn-primary" id="submit14">Завершить</button>
-      </div>
-    </div>
-    <div class="card thanks hidden" id="thanks14">
-      <i>✓</i><h2>Благодарим за ваши ответы!</h2>
-      <p>Результаты вы сможете узнать у педагога-психолога через неделю-другую.</p>
-      <div class="help-box">
-        <h3>Если тебе сейчас плохо или тревожно:</h3>
-        <p>• <strong>133</strong> — единый номер круглосуточной экстренной психологической помощи (анонимно, бесплатно) </p>
-        <p>• <strong>8-801-100-16-11</strong> — общенациональная детская телефонная линия помощи (круглосуточно, анонимно) </p>
-        <p>• Также ты можешь обратиться к школьному психологу лично — это бесплатно и конфиденциально.</p>
-      </div>
-    </div>
-  </div>
-</div>
+<form method="POST" action="ВАШ_URL/exec" target="_blank">
+  <input name="data" value='{"test":1}'>
+  <button type="submit">Тест</button>
+</form>
 
 <script>
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjaxELNQQnWHwiIH1fUBWBkSLrkqYiv2josdTnRuxv4r6icsXatq8dd7-I0XgoBVyF/exec';
