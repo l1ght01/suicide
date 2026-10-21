@@ -478,10 +478,6 @@ function renderQuestions(containerId, questions, storageKey, instructionHtml) {
   if (instructionHtml) html += `<div class="instruction">${instructionHtml}</div>`;
   
   questions.forEach((q, idx) => {
-    if (q.id === 's21') {
-      html += `<div class="instruction" style="margin-top: 2rem;">${staiInstructionLT}</div>`;
-    }
-    
     let opts;
     if (q.type === 'scale4') opts = scale4Options;
     else if (q.type === 'yesno') opts = yesNoOptions;
@@ -558,7 +554,7 @@ function calculate10to13(answers) {
   else if (zungIndex >= 60) { zungLevel = 'lvl-high'; zungLabel = 'Умеренная депрессия'; }
   else if (zungIndex >= 51) { zungLevel = 'lvl-mid'; zungLabel = 'Лёгкая депрессия'; }
 
-  // Филлипс
+  // Филлипс (ключ строго по вашему PDF)
   const phillipsKey = {
     f1:'-',f2:'-',f3:'-',f4:'-',f5:'-',f6:'-',f7:'-',f8:'-',f9:'-',f10:'-',
     f11:'+',f12:'-',f13:'-',f14:'-',f15:'-',f16:'-',f17:'-',f18:'-',f19:'-',f20:'+',
@@ -666,7 +662,6 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
   
   try {
     if (GOOGLE_SCRIPT_URL) {
-      // ИСПОЛЬЗУЕМ text/plain КАК В РАБОЧЕМ ПРИМЕРЕ
       await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
     }
     clearProgress(storageKey);
@@ -675,7 +670,7 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
     document.getElementById(thanksId).classList.remove('hidden');
     document.getElementById('globalProgressWrap').classList.add('hidden');
   } catch (err) { 
-    alert('Ошибка отправки. Проверьте соединение или настройки скрипта.'); 
+    alert('Ошибка отправки.'); 
     btn.disabled = false; btn.textContent = 'Завершить'; 
   }
 }
