@@ -14,7 +14,6 @@
   h1 { font-size: 1.8rem; font-weight: 700; color: #0a2e4e; margin-bottom: 0.4rem; }
   .subhead { color: #4b5b6b; font-size: 1rem; margin-bottom: 1.8rem; }
   
-  /* Фиксированная шапка с вкладками и прогрессом */
   .sticky-header {
     position: sticky;
     top: 0;
@@ -94,7 +93,7 @@
       <button class="tab-btn active" data-tab="10-13">10–13 лет</button>
       <button class="tab-btn" data-tab="14-17">14–17 лет</button>
     </div>
-    <div class="global-progress-wrap">
+    <div class="global-progress-wrap" id="globalProgressWrap">
       <div class="global-progress-text" id="globalProgressText">Отвечено: 0 из 0</div>
       <div class="global-progress-bar"><div class="global-progress-fill" id="globalProgressFill"></div></div>
     </div>
@@ -465,69 +464,59 @@ const staiQuestions = [
   { id: 's40', text: 'Меня охватывает беспокойство, когда я думаю о своих делах и заботах.', type: 'stai' },
 ];
 
-// ===== ЛОГИКА =====
+// ===== АВТОСОХРАНЕНИЕ =====
 function saveProgress(key, data) { localStorage.setItem('socio_progress_' + key, JSON.stringify(data)); }
 function loadProgress(key) { const raw = localStorage.getItem('socio_progress_' + key); return raw ? JSON.parse(raw) : null; }
 function clearProgress(key) { localStorage.removeItem('socio_progress_' + key); }
 
-function renderSingleQuestion(q, group) {
-  let opts;
-  if (q.type === 'scale4') opts = scale4Options;
-  else if (q.type === 'yesno') opts = yesNoOptions;
-  else if (q.type === 'stai') opts = staiOptions;
-  else if (q.type === 'beck') opts = q.options;
+// ===== РЕНДЕР =====
+function renderQuestions(containerId, questions, storageKey, instructionHtml) {
+  const container = document.getElementById(containerId);
+  const saved = loadProgress(storageKey);
   
-  const uniqueName = q.id;
-  const saved = loadProgress(group);
-  const optionsHtml = opts.map(o => {
-    const checked = saved && saved[q.id] === o.value ? 'checked' : '';
-    return `<label class="opt"><input type="radio" name="${uniqueName}" value="${o.value}" data-qid="${q.id}" ${checked}><span>${o.label}</span></label>`;
-  }).join('');
+  let html = '';
+  if (instructionHtml) html += `<div class="instruction">${instructionHtml}</div>`;
   
-  return `<div class="q-item" id="q-item-${q.id}">
-    <div class="q-text">${q.text}</div>
-    <div class="options">${optionsHtml}</div>
-  </div>`;
+  questions.forEach((q, idx) => {
+    if (q.id === 's21') {
+      html += `<div class="instruction" style="margin-top: 2rem;">${staiInstructionLT}</div>`;
+    }
+    
+    let opts;
+    if (q.type === 'scale4') opts = scale4Options;
+    else if (q.type === 'yesno') opts = yesNoOptions;
+    else if (q.type === 'stai') opts = staiOptions;
+    else if (q.type === 'beck') opts = q.options;
+    
+    const uniqueName = q.id + '_' + idx;
+    const optionsHtml = opts.map(o => {
+      const checked = saved && saved[q.id] === o.value ? 'checked' : '';
+      return `<label class="opt"><input type="radio" name="${uniqueName}" value="${o.value}" data-qid="${q.id}" ${checked}><span>${o.label}</span></label>`;
+    }).join('');
+    
+    html += `<div class="q-item" id="q-item-${q.id}">
+      <div class="q-text">${q.text}</div>
+      <div class="options">${optionsHtml}</div>
+    </div>`;
+  });
+  container.innerHTML = html;
 }
 
-function renderAllQuestions() {
-  document.getElementById('q10Container').innerHTML = `
-    <div class="instruction">${zungInstruction}</div>
-    ${zungQuestions.map(q => renderSingleQuestion(q, '10-13')).join('')}
-    <div class="instruction" style="margin-top: 2rem;">${phillipsInstruction}</div>
-    ${phillipsQuestions.map(q => renderSingleQuestion(q, '10-13')).join('')}
-  `;
-
-  document.getElementById('q14Container').innerHTML = `
-    <div class="instruction">${beckInstruction}</div>
-    ${beckQuestions.map(q => renderSingleQuestion(q, '14-17')).join('')}
-    <div class="instruction" style="margin-top: 2rem;">${staiInstructionST}</div>
-    ${staiQuestions.slice(0, 20).map(q => renderSingleQuestion(q, '14-17')).join('')}
-    <div class="instruction" style="margin-top: 2rem;">${staiInstructionLT}</div>
-    ${staiQuestions.slice(20).map(q => renderSingleQuestion(q, '14-17')).join('')}
-  `;
-}
-
-const allQ10 = [...zungQuestions, ...phillipsQuestions];
-const allQ14 = [...beckQuestions, ...staiQuestions];
-
-function updateGlobalProgress() {
-  const activeTab = document.querySelector('.tab-pane.active').id;
-  const is10 = activeTab === 'tab-10-13';
-  const questions = is10 ? allQ10 : allQ14;
-  const storageKey = is10 ? '10-13' : '14-17';
-  
-  let answered = 0;
-  const answers = {};
+// ===== ПРОГРЕСС =====
+function updateProgress(questions, submitBtnId, progressId, barId, storageKey, fioId, classId, ageId) {
+  let answered = 0; const answers = {};
   questions.forEach(q => {
     const checked = document.querySelector(`#q-item-${q.id} input:checked`);
     if (checked) { answered++; answers[q.id] = parseInt(checked.value, 10); }
   });
-  
   const total = questions.length;
-  document.getElementById('globalProgressText').textContent = `Отвечено: ${answered} из ${total}`;
-  document.getElementById('globalProgressFill').style.width = Math.round((answered/total)*100) + '%';
+  document.getElementById(progressId).textContent = `Отвечено: ${answered} из ${total}`;
+  document.getElementById(barId).style.width = Math.round((answered/total)*100) + '%';
   saveProgress(storageKey, answers);
+  const fio = document.getElementById(fioId).value.trim();
+  const cls = document.getElementById(classId).value;
+  const age = document.getElementById(ageId).value.trim();
+  document.getElementById(submitBtnId).disabled = !((answered === total) && fio && cls && age);
 }
 
 function collectAnswers(questions, storageKey) {
@@ -539,7 +528,7 @@ function collectAnswers(questions, storageKey) {
   return result;
 }
 
-// Проверка заполнения и скролл к ошибке
+// ===== ПРОВЕРКА ПЕРЕД ОТПРАВКОЙ =====
 function checkAndScroll(questions, group) {
   for (let q of questions) {
     const checked = document.querySelector(`#q-item-${q.id} input:checked`);
@@ -557,6 +546,7 @@ function checkAndScroll(questions, group) {
 
 // ===== РАСЧЁТ 10–13 =====
 function calculate10to13(answers) {
+  // Зунг
   const zungDirect = ['z1','z3','z4','z7','z8','z9','z10','z13','z15','z19'];
   const zungReverse = ['z2','z5','z6','z11','z12','z14','z16','z17','z18','z20'];
   let zungSum = 0;
@@ -564,10 +554,11 @@ function calculate10to13(answers) {
   zungReverse.forEach(k => { if (answers[k] != null) zungSum += (5 - answers[k]); });
   const zungIndex = Math.round((zungSum / 80) * 100);
   let zungLevel = 'lvl-low', zungLabel = 'Без депрессии';
-  if (zungIndex >= 70) { zungLevel = 'lvl-crit'; zungLabel = 'Истинное депрессивное состояние'; }
-  else if (zungIndex >= 60) { zungLevel = 'lvl-high'; zungLabel = 'Субдепрессивное состояние'; }
-  else if (zungIndex >= 51) { zungLevel = 'lvl-mid'; zungLabel = 'Легкая депрессия'; }
+  if (zungIndex >= 70) { zungLevel = 'lvl-crit'; zungLabel = 'Тяжёлая депрессия'; }
+  else if (zungIndex >= 60) { zungLevel = 'lvl-high'; zungLabel = 'Умеренная депрессия'; }
+  else if (zungIndex >= 51) { zungLevel = 'lvl-mid'; zungLabel = 'Лёгкая депрессия'; }
 
+  // Филлипс
   const phillipsKey = {
     f1:'-',f2:'-',f3:'-',f4:'-',f5:'-',f6:'-',f7:'-',f8:'-',f9:'-',f10:'-',
     f11:'+',f12:'-',f13:'-',f14:'-',f15:'-',f16:'-',f17:'-',f18:'-',f19:'-',f20:'+',
@@ -603,6 +594,7 @@ function calculate10to13(answers) {
 
 // ===== РАСЧЁТ 14–17 =====
 function calculate14to17(answers) {
+  // Бек
   let beckSum = 0, beckCog = 0, beckSom = 0;
   for (let i = 1; i <= 21; i++) {
     const v = answers['b' + i];
@@ -612,8 +604,9 @@ function calculate14to17(answers) {
   if (beckSum >= 30) { beckLevel = 'lvl-crit'; beckLabel = 'Тяжёлая депрессия'; }
   else if (beckSum >= 20) { beckLevel = 'lvl-high'; beckLabel = 'Выраженная депрессия'; }
   else if (beckSum >= 16) { beckLevel = 'lvl-mid'; beckLabel = 'Умеренная депрессия'; }
-  else if (beckSum >= 10) { beckLevel = 'lvl-mid'; beckLabel = 'Легкая депрессия'; }
+  else if (beckSum >= 10) { beckLevel = 'lvl-mid'; beckLabel = 'Лёгкая депрессия'; }
 
+  // Спилбергер
   const staiDirectST = ['s3','s4','s6','s7','s9','s12','s13','s14','s17','s18'];
   const staiReverseST = ['s1','s2','s5','s8','s10','s11','s15','s16','s19','s20'];
   const staiDirectLT = ['s22','s23','s24','s25','s28','s29','s31','s32','s34','s35','s37','s38','s40'];
@@ -636,6 +629,7 @@ function calculate14to17(answers) {
   return { beck: { sum: beckSum, cog: beckCog, som: beckSom, level: beckLevel, label: beckLabel }, stai: { st: staiST, stLevel: staiSTLevel, stLabel: staiSTLabel, lt: staiLT, ltLevel: staiLTLevel, ltLabel: staiLTLabel } };
 }
 
+// ===== ПОДОЗРИТЕЛЬНЫЕ =====
 function checkSuspicious(answers, ageGroup) {
   const warnings = [];
   const values = Object.values(answers).filter(v => v != null);
@@ -672,7 +666,8 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
   
   try {
     if (GOOGLE_SCRIPT_URL) {
-      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json;charset=utf-8' }, body: JSON.stringify(payload) });
+      // ИСПОЛЬЗУЕМ text/plain КАК В РАБОЧЕМ ПРИМЕРЕ
+      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
     }
     clearProgress(storageKey);
     document.getElementById(formCardId).classList.add('hidden');
@@ -680,27 +675,69 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
     document.getElementById(thanksId).classList.remove('hidden');
     document.getElementById('globalProgressWrap').classList.add('hidden');
   } catch (err) { 
-    alert('Ошибка отправки. Убедитесь, что сайт открыт через локальный сервер (http), а не через file://.'); 
+    alert('Ошибка отправки. Проверьте соединение или настройки скрипта.'); 
     btn.disabled = false; btn.textContent = 'Завершить'; 
   }
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====
-renderAllQuestions();
+renderQuestions('q10Container', zungQuestions, '10-13', zungInstruction);
+renderQuestions('q14Container', beckQuestions, '14-17', beckInstruction);
+
+// Добавляем Филлипса и Спилбергера вручную
+document.getElementById('q10Container').innerHTML += `
+  <div class="instruction" style="margin-top: 2rem;">${phillipsInstruction}</div>
+  ${phillipsQuestions.map((q, idx) => {
+    const uniqueName = q.id;
+    const saved = loadProgress('10-13');
+    const optionsHtml = yesNoOptions.map(o => {
+      const checked = saved && saved[q.id] === o.value ? 'checked' : '';
+      return `<label class="opt"><input type="radio" name="${uniqueName}" value="${o.value}" data-qid="${q.id}" ${checked}><span>${o.label}</span></label>`;
+    }).join('');
+    return `<div class="q-item" id="q-item-${q.id}"><div class="q-text">${q.text}</div><div class="options">${optionsHtml}</div></div>`;
+  }).join('')}
+`;
+
+document.getElementById('q14Container').innerHTML += `
+  <div class="instruction" style="margin-top: 2rem;">${staiInstructionST}</div>
+  ${staiQuestions.slice(0, 20).map((q, idx) => {
+    const uniqueName = q.id;
+    const saved = loadProgress('14-17');
+    const optionsHtml = staiOptions.map(o => {
+      const checked = saved && saved[q.id] === o.value ? 'checked' : '';
+      return `<label class="opt"><input type="radio" name="${uniqueName}" value="${o.value}" data-qid="${q.id}" ${checked}><span>${o.label}</span></label>`;
+    }).join('');
+    return `<div class="q-item" id="q-item-${q.id}"><div class="q-text">${q.text}</div><div class="options">${optionsHtml}</div></div>`;
+  }).join('')}
+  <div class="instruction" style="margin-top: 2rem;">${staiInstructionLT}</div>
+  ${staiQuestions.slice(20).map((q, idx) => {
+    const uniqueName = q.id;
+    const saved = loadProgress('14-17');
+    const optionsHtml = staiOptions.map(o => {
+      const checked = saved && saved[q.id] === o.value ? 'checked' : '';
+      return `<label class="opt"><input type="radio" name="${uniqueName}" value="${o.value}" data-qid="${q.id}" ${checked}><span>${o.label}</span></label>`;
+    }).join('');
+    return `<div class="q-item" id="q-item-${q.id}"><div class="q-text">${q.text}</div><div class="options">${optionsHtml}</div></div>`;
+  }).join('')}
+`;
 
 document.querySelectorAll('input[type="radio"]').forEach(el => {
-  el.addEventListener('change', updateGlobalProgress);
+  el.addEventListener('change', () => {
+    const activeTab = document.querySelector('.tab-pane.active').id;
+    if (activeTab === 'tab-10-13') updateProgress(allQ10, 'submit10', 'progress10', 'progressBar10', '10-13', 'fio10', 'class10', 'age10');
+    else updateProgress(allQ14, 'submit14', 'progress14', 'progressBar14', '14-17', 'fio14', 'class14', 'age14');
+  });
 });
 document.querySelectorAll('.field input, .field select').forEach(el => {
-  el.addEventListener('input', updateGlobalProgress);
+  el.addEventListener('input', () => {
+    const activeTab = document.querySelector('.tab-pane.active').id;
+    if (activeTab === 'tab-10-13') updateProgress(allQ10, 'submit10', 'progress10', 'progressBar10', '10-13', 'fio10', 'class10', 'age10');
+    else updateProgress(allQ14, 'submit14', 'progress14', 'progressBar14', '14-17', 'fio14', 'class14', 'age14');
+  });
 });
 
-document.getElementById('submit10').addEventListener('click', (e) => {
-  submitForm('10-13', allQ10, 'fio10', 'class10', 'age10', 'thanks10', 'form10Card', 'questions10', '10-13');
-});
-document.getElementById('submit14').addEventListener('click', (e) => {
-  submitForm('14-17', allQ14, 'fio14', 'class14', 'age14', 'thanks14', 'form14Card', 'questions14', '14-17');
-});
+document.getElementById('submit10').addEventListener('click', () => submitForm('10-13', allQ10, 'fio10', 'class10', 'age10', 'thanks10', 'form10Card', 'questions10', '10-13'));
+document.getElementById('submit14').addEventListener('click', () => submitForm('14-17', allQ14, 'fio14', 'class14', 'age14', 'thanks14', 'form14Card', 'questions14', '14-17'));
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -708,11 +745,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    updateGlobalProgress();
   });
 });
-
-setTimeout(updateGlobalProgress, 100);
 </script>
 </body>
 </html>
