@@ -499,20 +499,21 @@ function renderQuestions(containerId, questions, storageKey, instructionHtml) {
 }
 
 // ===== ПРОГРЕСС =====
-function updateProgress(questions, submitBtnId, progressId, barId, storageKey, fioId, classId, ageId) {
-  let answered = 0; const answers = {};
+function updateGlobalProgress() {
+  const activeTab = document.querySelector('.tab-pane.active').id;
+  const is10 = activeTab === 'tab-10-13';
+  const questions = is10 ? allQ10 : allQ14;
+  const storageKey = is10 ? '10-13' : '14-17';
+  
+  let answered = 0;
   questions.forEach(q => {
     const checked = document.querySelector(`#q-item-${q.id} input:checked`);
-    if (checked) { answered++; answers[q.id] = parseInt(checked.value, 10); }
+    if (checked) answered++;
   });
+  
   const total = questions.length;
-  document.getElementById(progressId).textContent = `Отвечено: ${answered} из ${total}`;
-  document.getElementById(barId).style.width = Math.round((answered/total)*100) + '%';
-  saveProgress(storageKey, answers);
-  const fio = document.getElementById(fioId).value.trim();
-  const cls = document.getElementById(classId).value;
-  const age = document.getElementById(ageId).value.trim();
-  document.getElementById(submitBtnId).disabled = !((answered === total) && fio && cls && age);
+  document.getElementById('globalProgressText').textContent = `Отвечено: ${answered} из ${total}`;
+  document.getElementById('globalProgressFill').style.width = Math.round((answered/total)*100) + '%';
 }
 
 function collectAnswers(questions) {
@@ -554,7 +555,7 @@ function calculate10to13(answers) {
   else if (zungIndex >= 60) { zungLevel = 'lvl-high'; zungLabel = 'Умеренная депрессия'; }
   else if (zungIndex >= 51) { zungLevel = 'lvl-mid'; zungLabel = 'Лёгкая депрессия'; }
 
-  // Филлипс (ключ по PDF: '+' = ожидается "Да", '-' = ожидается "Нет")
+  // Филлипс
   const phillipsKey = {
     f1:'-',f2:'-',f3:'-',f4:'-',f5:'-',f6:'-',f7:'-',f8:'-',f9:'-',f10:'-',
     f11:'+',f12:'-',f13:'-',f14:'-',f15:'-',f16:'-',f17:'-',f18:'-',f19:'-',f20:'+',
@@ -662,7 +663,14 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
   
   try {
     if (GOOGLE_SCRIPT_URL) {
-      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+      const response = await fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify(payload) 
+      });
+      if (!response.ok) {
+        throw new Error('Server responded with status ' + response.status);
+      }
     }
     clearProgress(storageKey);
     document.getElementById(formCardId).classList.add('hidden');
@@ -670,7 +678,7 @@ async function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, 
     document.getElementById(thanksId).classList.remove('hidden');
     document.getElementById('globalProgressWrap').classList.add('hidden');
   } catch (err) { 
-    alert('Ошибка отправки.'); 
+    alert('Ошибка отправки: ' + err.message); 
     btn.disabled = false; btn.textContent = 'Завершить'; 
   }
 }
@@ -721,18 +729,40 @@ document.getElementById('q14Container').innerHTML += `
 
 document.querySelectorAll('input[type="radio"]').forEach(el => {
   el.addEventListener('change', () => {
+    updateGlobalProgress();
     const activeTab = document.querySelector('.tab-pane.active').id;
-    if (activeTab === 'tab-10-13') updateProgress(allQ10, 'submit10', 'progress10', 'progressBar10', '10-13', 'fio10', 'class10', 'age10');
-    else updateProgress(allQ14, 'submit14', 'progress14', 'progressBar14', '14-17', 'fio14', 'class14', 'age14');
+    if (activeTab === 'tab-10-13') {
+      updateProgressCheck(allQ10, 'submit10', 'fio10', 'class10', 'age10');
+    } else {
+      updateProgressCheck(allQ14, 'submit14', 'fio14', 'class14', 'age14');
+    }
   });
 });
+
 document.querySelectorAll('.field input, .field select').forEach(el => {
   el.addEventListener('input', () => {
+    updateGlobalProgress();
     const activeTab = document.querySelector('.tab-pane.active').id;
-    if (activeTab === 'tab-10-13') updateProgress(allQ10, 'submit10', 'progress10', 'progressBar10', '10-13', 'fio10', 'class10', 'age10');
-    else updateProgress(allQ14, 'submit14', 'progress14', 'progressBar14', '14-17', 'fio14', 'class14', 'age14');
+    if (activeTab === 'tab-10-13') {
+      updateProgressCheck(allQ10, 'submit10', 'fio10', 'class10', 'age10');
+    } else {
+      updateProgressCheck(allQ14, 'submit14', 'fio14', 'class14', 'age14');
+    }
   });
 });
+
+function updateProgressCheck(questions, submitBtnId, fioId, classId, ageId) {
+  let answered = 0;
+  questions.forEach(q => {
+    const checked = document.querySelector(`#q-item-${q.id} input:checked`);
+    if (checked) answered++;
+  });
+  const total = questions.length;
+  const fio = document.getElementById(fioId).value.trim();
+  const cls = document.getElementById(classId).value;
+  const age = document.getElementById(ageId).value.trim();
+  document.getElementById(submitBtnId).disabled = !((answered === total) && fio && cls && age);
+}
 
 document.getElementById('submit10').addEventListener('click', (e) => {
   submitForm('10-13', allQ10, 'fio10', 'class10', 'age10', 'thanks10', 'form10Card', 'questions10', '10-13', e.target);
@@ -747,8 +777,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    updateGlobalProgress();
   });
 });
+
+setTimeout(updateGlobalProgress, 100);
 </script>
 </body>
 </html>
