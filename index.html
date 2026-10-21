@@ -84,15 +84,107 @@
 </style>
 </head>
 <body>
-<!-- Скрытый iframe для отправки данных без перезагрузки страницы -->
-<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
-<form method="POST" action="ВАШ_URL/exec" target="_blank">
-  <input name="data" value='{"test":1}'>
-  <button type="submit">Тест</button>
-</form>
+<div class="container">
+  <h1>Опросник</h1>
+  <div class="subhead">Пожалуйста, ответьте на вопросы. Это займёт 15–20 минут.</div>
+
+  <div class="sticky-header">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="10-13">10–13 лет</button>
+      <button class="tab-btn" data-tab="14-17">14–17 лет</button>
+    </div>
+    <div class="global-progress-wrap" id="globalProgressWrap">
+      <div class="global-progress-text" id="globalProgressText">Отвечено: 0 из 0</div>
+      <div class="global-progress-bar"><div class="global-progress-fill" id="globalProgressFill"></div></div>
+    </div>
+  </div>
+
+  <!-- ================= 10-13 ================= -->
+  <div class="tab-pane active" id="tab-10-13">
+    <div class="card" id="form10Card">
+      <h2>Ваши данные</h2>
+      <div class="field">
+        <label>Фамилия Имя Отчество</label>
+        <input type="text" id="fio10" placeholder="Иванов Иван Иванович" autocomplete="off">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Класс</label>
+          <select id="class10">
+            <option value="">Выберите класс</option>
+            <option>5 класс</option><option>6 класс</option><option>7 класс</option>
+            <option>8 класс</option><option>9 класс</option><option>10 класс</option><option>11 класс</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Возраст</label>
+          <input type="number" id="age10" min="1" max="99" placeholder="10">
+        </div>
+      </div>
+    </div>
+    <div class="card" id="questions10">
+      <div id="q10Container"></div>
+      <div style="margin-top:1.5rem; text-align:right;">
+        <button class="btn btn-primary" id="submit10">Завершить</button>
+      </div>
+    </div>
+    <div class="card thanks hidden" id="thanks10">
+      <i>✓</i><h2>Благодарим за ваши ответы!</h2>
+      <p>Результаты вы сможете узнать у педагога-психолога через неделю-другую.</p>
+      <div class="help-box">
+        <h3>Если тебе сейчас плохо или тревожно:</h3>
+        <p>• <strong>133</strong> — единый номер круглосуточной экстренной психологической помощи (анонимно, бесплатно) </p>
+        <p>• <strong>8-801-100-16-11</strong> — общенациональная детская телефонная линия помощи (круглосуточно, анонимно) </p>
+        <p>• Также ты можешь обратиться к школьному психологу лично — это бесплатно и конфиденциально.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 14-17 ================= -->
+  <div class="tab-pane" id="tab-14-17">
+    <div class="card" id="form14Card">
+      <h2>Ваши данные</h2>
+      <div class="field">
+        <label>Фамилия Имя Отчество</label>
+        <input type="text" id="fio14" placeholder="Иванов Иван Иванович" autocomplete="off">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Класс</label>
+          <select id="class14">
+            <option value="">Выберите класс</option>
+            <option>5 класс</option><option>6 класс</option><option>7 класс</option>
+            <option>8 класс</option><option>9 класс</option><option>10 класс</option><option>11 класс</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Возраст</label>
+          <input type="number" id="age14" min="1" max="99" placeholder="14">
+        </div>
+      </div>
+    </div>
+    <div class="card" id="questions14">
+      <div id="q14Container"></div>
+      <div style="margin-top:1.5rem; text-align:right;">
+        <button class="btn btn-primary" id="submit14">Завершить</button>
+      </div>
+    </div>
+    <div class="card thanks hidden" id="thanks14">
+      <i>✓</i><h2>Благодарим за ваши ответы!</h2>
+      <p>Результаты вы сможете узнать у педагога-психолога через неделю-другую.</p>
+      <div class="help-box">
+        <h3>Если тебе сейчас плохо или тревожно:</h3>
+        <p>• <strong>133</strong> — единый номер круглосуточной экстренной психологической помощи (анонимно, бесплатно) </p>
+        <p>• <strong>8-801-100-16-11</strong> — общенациональная детская телефонная линия помощи (круглосуточно, анонимно) </p>
+        <p>• Также ты можешь обратиться к школьному психологу лично — это бесплатно и конфиденциально.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
+// ВАЖНО: Убедитесь, что это URL актуального развертывания (заканчивается на /exec)
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjaxELNQQnWHwiIH1fUBWBkSLrkqYiv2josdTnRuxv4r6icsXatq8dd7-I0XgoBVyF/exec';
 
 // ===== ШКАЛЫ ОТВЕТОВ =====
@@ -413,7 +505,6 @@ function updateGlobalProgress() {
   const activeTab = document.querySelector('.tab-pane.active').id;
   const is10 = activeTab === 'tab-10-13';
   const questions = is10 ? allQ10 : allQ14;
-  const storageKey = is10 ? '10-13' : '14-17';
   
   let answered = 0;
   questions.forEach(q => {
@@ -453,7 +544,6 @@ function checkAndScroll(questions) {
 
 // ===== РАСЧЁТ 10–13 =====
 function calculate10to13(answers) {
-  // Зунг
   const zungDirect = ['z1','z3','z4','z7','z8','z9','z10','z13','z15','z19'];
   const zungReverse = ['z2','z5','z6','z11','z12','z14','z16','z17','z18','z20'];
   let zungSum = 0;
@@ -465,7 +555,6 @@ function calculate10to13(answers) {
   else if (zungIndex >= 60) { zungLevel = 'lvl-high'; zungLabel = 'Умеренная депрессия'; }
   else if (zungIndex >= 51) { zungLevel = 'lvl-mid'; zungLabel = 'Лёгкая депрессия'; }
 
-  // Филлипс
   const phillipsKey = {
     f1:'-',f2:'-',f3:'-',f4:'-',f5:'-',f6:'-',f7:'-',f8:'-',f9:'-',f10:'-',
     f11:'+',f12:'-',f13:'-',f14:'-',f15:'-',f16:'-',f17:'-',f18:'-',f19:'-',f20:'+',
@@ -492,7 +581,6 @@ function calculate10to13(answers) {
       const ans = answers[id];
       if (ans == null) return;
       const key = phillipsKey[id];
-      // Тревожность = несовпадение с ключом
       if ((key === '+' && ans === 0) || (key === '-' && ans === 1)) score++;
     });
     phillipsFactorScores[fName] = score;
@@ -502,7 +590,6 @@ function calculate10to13(answers) {
 
 // ===== РАСЧЁТ 14–17 =====
 function calculate14to17(answers) {
-  // Бек
   let beckSum = 0, beckCog = 0, beckSom = 0;
   for (let i = 1; i <= 21; i++) {
     const v = answers['b' + i];
@@ -514,7 +601,6 @@ function calculate14to17(answers) {
   else if (beckSum >= 16) { beckLevel = 'lvl-mid'; beckLabel = 'Умеренная депрессия'; }
   else if (beckSum >= 10) { beckLevel = 'lvl-mid'; beckLabel = 'Лёгкая депрессия'; }
 
-  // Спилбергер
   const staiDirectST = ['s3','s4','s6','s7','s9','s12','s13','s14','s17','s18'];
   const staiReverseST = ['s1','s2','s5','s8','s10','s11','s15','s16','s19','s20'];
   const staiDirectLT = ['s22','s23','s24','s25','s28','s29','s31','s32','s34','s35','s37','s38','s40'];
@@ -547,7 +633,7 @@ function checkSuspicious(answers, ageGroup) {
   return warnings;
 }
 
-// ===== ОТПРАВКА ЧЕРЕЗ HTML-ФОРМУ =====
+// ===== ОТПРАВКА (ИСПРАВЛЕНО НА FETCH) =====
 function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, formCardId, questionsCardId, storageKey, btn) {
   const fio = document.getElementById(fioId).value.trim();
   const cls = document.getElementById(classId).value;
@@ -571,30 +657,23 @@ function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, formCa
   const suspicious = checkSuspicious(answers, ageGroup);
   const payload = { ageGroup, fio, className: cls, age, timestamp: new Date().toISOString(), answers, results, suspicious };
   
-  // Отправка через форму
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = GOOGLE_SCRIPT_URL;
-  form.target = 'hidden_iframe';
-  form.style.display = 'none';
-  
-  const input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = 'data';
-  input.value = JSON.stringify(payload);
-  form.appendChild(input);
-  
-  document.body.appendChild(form);
-  form.submit();
-  
-  setTimeout(() => {
-    document.body.removeChild(form);
+  // Использование fetch вместо формы
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors', // Важно для Google Apps Script
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    // В режиме no-cors мы не можем прочитать ответ, считаем что успех
     clearProgress(storageKey);
     document.getElementById(formCardId).classList.add('hidden');
     document.getElementById(questionsCardId).classList.add('hidden');
     document.getElementById(thanksId).classList.remove('hidden');
     document.getElementById('globalProgressWrap').classList.add('hidden');
-  }, 500);
+  }).catch(err => {
+    alert('Ошибка отправки. Проверьте интернет-соединение.');
+    btn.disabled = false; btn.textContent = 'Завершить';
+  });
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====
