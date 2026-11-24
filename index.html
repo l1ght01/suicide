@@ -592,6 +592,13 @@ function checkSuspicious(answers, ageGroup) {
 
 // ===== ОТПРАВКА (ИСПРАВЛЕНО НА FETCH) =====
 function submitForm(ageGroup, questions, fioId, classId, ageId, thanksId, formCardId, questionsCardId, storageKey, btn) {
+  // ← ВСТАВИТЬ СЮДА:
+  const activeTab = document.querySelector('.tab-pane.active').id;
+  const expected = ageGroup === '10-13' ? 'tab-10-13' : 'tab-14-17';
+  if (activeTab !== expected) {
+    alert('Ошибка: активна вкладка ' + activeTab + ', а отправляется ' + ageGroup + '. Переключитесь на нужную вкладку.');
+    return;
+  }
   const fio = document.getElementById(fioId).value.trim();
   const cls = document.getElementById(classId).value;
   const age = document.getElementById(ageId).value.trim();
@@ -677,8 +684,8 @@ document.getElementById('q14Container').innerHTML += `
   }).join('')}
 `;
 
-document.querySelectorAll('input[type="radio"]').forEach(el => {
-  el.addEventListener('change', () => {
+document.addEventListener('change', (e) => {
+  if (e.target.matches('input[type="radio"]')) {
     updateGlobalProgress();
     const activeTab = document.querySelector('.tab-pane.active').id;
     if (activeTab === 'tab-10-13') {
@@ -686,11 +693,11 @@ document.querySelectorAll('input[type="radio"]').forEach(el => {
     } else {
       updateProgressCheck(allQ14, 'submit14', 'fio14', 'class14', 'age14');
     }
-  });
+  }
 });
 
-document.querySelectorAll('.field input, .field select').forEach(el => {
-  el.addEventListener('input', () => {
+document.addEventListener('input', (e) => {
+  if (e.target.matches('.field input, .field select')) {
     updateGlobalProgress();
     const activeTab = document.querySelector('.tab-pane.active').id;
     if (activeTab === 'tab-10-13') {
@@ -698,7 +705,7 @@ document.querySelectorAll('.field input, .field select').forEach(el => {
     } else {
       updateProgressCheck(allQ14, 'submit14', 'fio14', 'class14', 'age14');
     }
-  });
+  }
 });
 
 function updateProgressCheck(questions, submitBtnId, fioId, classId, ageId) {
